@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>글캡 (GeulCap) - 이미지 텍스트 변환기 (OCR)</title>
+  <meta name="description" content="설치 없이 웹 브라우저에서 바로 동작하는 고성능 이미지 글씨 추출(OCR) 프로그램입니다. 한국어, 영어, 다국어 인식을 지원하며 데이터를 서버로 보내지 않아 안전합니다.">
+  
+  <!-- PWA & Mobile Optimization -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <link rel="stylesheet" href="styles.css">
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="glow-spot glow-1"></div>
+  <div class="glow-spot glow-2"></div>
+
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">글</div>
+      <h1>글캡 (GeulCap)</h1>
+    </div>
+    <p>이미지 속 텍스트를 인공지능 OCR 기술로 빠르고 정확하게 추출하세요 (100% 온디바이스 보안)</p>
+  </header>
+
+  <main>
+    <!-- Left Column: Image Upload & Controls -->
+    <section class="glass-panel" aria-labelledby="input-title">
+      <h2 class="panel-title" id="input-title">
+        <i class="fas fa-file-image"></i> 이미지 입력
+      </h2>
+      
+      <div class="dropzone-container">
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="이미지 업로드 영역">
+          <input type="file" id="imageInput" accept="image/*" style="display: none;">
+          
+          <div class="upload-content" id="uploadContent">
+            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+            <p>여기에 이미지를 드래그하여 놓거나 클릭하여 선택하세요</p>
+            <p style="font-size: 0.85rem; margin-top: 0.25rem;">클립보드 이미지를 붙여넣기(Ctrl + V) 할 수도 있습니다</p>
+            <span>지원 파일: PNG, JPG, JPEG, WEBP 등</span>
+          </div>
+
+          <div class="preview-wrapper" id="previewWrapper">
+            <div class="scan-line" id="scanLine"></div>
+            <canvas id="imagePreviewCanvas" role="img" aria-label="업로드된 이미지 미리보기"></canvas>
+            <div class="preview-controls">
+              <button class="action-btn" id="rotateBtn" type="button" title="오른쪽으로 90도 회전" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;">
+                <i class="fas fa-redo"></i> 회전
+              </button>
+              <label class="filter-label">
+                <input type="checkbox" id="filterToggle" checked>
+                <span style="font-size: 0.8rem;">문서/영수증 최적화</span>
+              </label>
+            </div>
+            <button class="remove-btn" id="removeBtn" title="이미지 제거" aria-label="이미지 제거">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <div class="settings-section">
+          <label for="languageSelect" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;">인식할 언어 설정</label>
+          <div class="select-wrapper">
+            <select id="languageSelect" aria-label="인식 언어 선택">
+              <option value="kor" selected>한국어 (Korean) [추천]</option>
+              <option value="kor+eng">한국어 + 영어 (혼용)</option>
+              <option value="eng">영어 (English)</option>
+              <option value="jpn">일본어 (Japanese)</option>
+              <option value="chi_sim">중국어 간체 (Chinese Simplified)</option>
+              <option value="chi_tra">중국어 번체 (Chinese Traditional)</option>
+            </select>
+        </div>
+
+        <div class="settings-section" style="margin-top: 1.25rem; margin-bottom: 1.25rem;">
+          <label for="thresholdSlider" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; display: flex; justify-content: space-between;">
+            <span>글씨 선명도 / 굵기 보정</span>
+            <span id="thresholdVal" style="color: #a855f7; font-weight: 600;">얇게 (8)</span>
+          </label>
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+            <span style="font-size: 0.75rem; color: var(--text-muted);">얇게</span>
+            <input type="range" id="thresholdSlider" min="4" max="18" value="8" style="flex: 1; accent-color: #6366f1; cursor: pointer;" aria-label="글씨 굵기 조절">
+            <span style="font-size: 0.75rem; color: var(--text-muted);">굵게</span>
+          </div>
+        </div>
+
+        <button class="btn-ocr" id="startBtn" disabled>
+          <i class="fas fa-magic"></i> 텍스트 추출하기
+        </button>
+
+        <div class="progress-container" id="progressContainer">
+          <div class="progress-header">
+            <span class="status-text" id="statusText">준비 중...</span>
+            <span class="percent-text" id="percentText">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Results -->
+    <section class="glass-panel" aria-labelledby="result-title">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h2 class="panel-title" id="result-title" style="margin-bottom: 0;">
+          <i class="fas fa-file-alt"></i> 추출 결과
+        </h2>
+        <div class="action-bar">
+          <button class="action-btn" id="copyBtn" title="텍스트 클립보드에 복사" disabled>
+            <i class="far fa-copy"></i> 복사
+          </button>
+          <button class="action-btn" id="downloadBtn" title="텍스트 파일로 저장" disabled>
+            <i class="fas fa-download"></i> 다운로드
+          </button>
+        </div>
+      </div>
+
+      <div class="textarea-container">
+        <textarea class="result-textarea" id="resultTextarea" placeholder="왼쪽 영역에 이미지를 드래그하거나 선택하면 글씨 추출 기능이 활성화됩니다. 추출된 텍스트는 여기에 표시되며 편집이 가능합니다." aria-label="추출된 텍스트 결과"></textarea>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom Section: History -->
+  <section class="history-section" aria-labelledby="history-title">
+    <div class="history-card">
+      <div class="history-header">
+        <h2 id="history-title">
+          <i class="fas fa-history"></i> 최근 변환 기록
+        </h2>
+        <button class="clear-history-btn" id="clearHistoryBtn">
+          <i class="fas fa-trash-alt"></i> 전체 삭제
+        </button>
+      </div>
+      <div class="history-list" id="historyList">
+        <!-- History items will be inserted dynamically here -->
+        <div class="no-history" id="noHistory">
+          <i class="far fa-folder-open"></i>
+          <p>저장된 변환 기록이 없습니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Toast Notification -->
+  <div class="copy-toast" id="copyToast" role="alert" aria-live="assertive">
+    <i class="fas fa-check-circle"></i>
+    <span>클립보드에 복사되었습니다!</span>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 글캡(GeulCap) OCR. All Rights Reserved. 브라우저 내부에서만 연산하며 어떠한 이미지나 파일 정보도 외부 서버로 전송하지 않습니다.</p>
+  </footer>
+
+  <!-- Tesseract.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.3/dist/tesseract.min.js"></script>
+  <!-- Application JS -->
+  <script src="app.js"></script>
+</body>
+</html>

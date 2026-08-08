@@ -1,0 +1,24 @@
+{
+  "name": "글캡 (GeulCap) - OCR 텍스트 추출기",
+  "short_name": "글캡",
+  "description": "설치 없이 온디바이스로 작동하는 빠르고 안전한 이미지 글씨 추출(OCR) 프로그램입니다.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0c16",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
