@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aests2023.github.io/geulcap-mobile/sitemap.xml
